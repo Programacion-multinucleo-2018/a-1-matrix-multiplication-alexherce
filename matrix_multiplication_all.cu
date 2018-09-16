@@ -10,7 +10,7 @@
 
 using namespace std;
 
-#define matrixSize 2000
+#define matrixSize 1000
 
 // Multiply Matrices in GPU
 __global__ void multMatrixGPU(long *MatA, long *MatB, long *MatC, int nx, int ny)
@@ -19,10 +19,12 @@ __global__ void multMatrixGPU(long *MatA, long *MatB, long *MatC, int nx, int ny
 	unsigned int iy = threadIdx.y + blockIdx.y * blockDim.y; // row
 	unsigned int idx = iy * nx + ix;
 
+	long sum = 0;
 	if (ix < nx && iy < ny) {
 		for (int i = 0; i < nx; i++) {
-			MatC[idx] += MatA[iy * nx + i] * MatB[i * ny + ix];
+			sum += MatA[iy * nx + i] * MatB[i * ny + ix];
 		}
+		MatC[idx] = sum;
 	}
 }
 
@@ -61,7 +63,7 @@ void multMatrixCPUParallel(long *A, long *B, long *C, const int nx, const int ny
 
 	omp_set_num_threads(nProcessors/2);
 
-	#pragma omp parallel for private(sum,i,j,k) shared(ia, ib, ic, nx, ny)
+	#pragma omp parallel for private(sum,i,j,k) shared(ia, ib, ic)
 	for (i = 0; i < nx; i++) {
 		for (j = 0; j < nx; j++) {
 			sum = 0;
